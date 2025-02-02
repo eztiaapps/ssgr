@@ -43,7 +43,7 @@ st.sidebar.markdown ("""
                      """)
 
 # Collects the stock csv file from user
-uploaded_file = st.sidebar.file_uploader("Upload the stock balance sheet", type=["xlsx"])
+uploaded_file = st.sidebar.file_uploader("Upload that stock balance sheet here", type=["xlsx"])
 if uploaded_file is not None:
     input_df = split_excel_into_dataframes(uploaded_file)
     file_name =  uploaded_file.name
