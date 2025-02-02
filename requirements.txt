@@ -2,3 +2,10 @@ pandas
 streamlit
 numpy
 scipy
+scikit-learn
+plotly
+streamlit-option-menu
+requests
+bs4
+openpyxl
+matplotlib
