@@ -47,73 +47,77 @@ uploaded_file = st.sidebar.file_uploader("Upload that stock balance sheet here",
 if uploaded_file is not None:
     input_df = split_excel_into_dataframes(uploaded_file)
     file_name =  uploaded_file.name
-    pnl = pnlpreprocess(input_df['PROFIT & LOSS'])
-    print(type(file_name))
+    try:
+        pnl = pnlpreprocess(input_df['PROFIT & LOSS'])
+        print(type(file_name))
 
-    st.markdown(f"### Yearly Sales Growth Trend - {file_name}")
-    st.write(pnl)
+        st.markdown(f"### Yearly Sales Growth Trend - {file_name}")
+        st.write(pnl)
 
-    # ✅ Transpose DataFrame
-    df = pnl.loc[0]
-    df = df.to_frame().T
-    df = df.set_index("Report Date").T.reset_index()
+        # ✅ Transpose DataFrame
+        df = pnl.loc[0]
+        df = df.to_frame().T
+        df = df.set_index("Report Date").T.reset_index()
 
-    # ✅ Rename Columns
-    df.columns = ["Report Date", "Sales"]
+        # ✅ Rename Columns
+        df.columns = ["Report Date", "Sales"]
 
-    # ✅ Convert Data Types
-    df["Report Date"] = pd.to_datetime(df["Report Date"])  # Convert to DateTime
-    df["Sales"] = pd.to_numeric(df["Sales"], errors="coerce")  # Convert to Float
-    #✅ Calculate Sales Growth (%)
-    df["Sales Growth (%)"] = df["Sales"].pct_change() * 100
+        # ✅ Convert Data Types
+        df["Report Date"] = pd.to_datetime(df["Report Date"])  # Convert to DateTime
+        df["Sales"] = pd.to_numeric(df["Sales"], errors="coerce")  # Convert to Float
+        #✅ Calculate Sales Growth (%)
+        df["Sales Growth (%)"] = df["Sales"].pct_change() * 100
 
-    # ✅ Display Result
-    st.write("""
-         ### 1. Checkpoint : whether Sales growth increasing or decreasing!
-         """)
+        # ✅ Display Result
+        st.write("""
+            ### 1. Checkpoint : whether Sales growth increasing or decreasing!
+            """)
 
-    st.write(df)
+        st.write(df)
+        
+        
+
+        # Create the Streamlit app title
+        st.title("📈 Sales Growth Trend")
+
+        # Create a polished chart
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        # Plot the Sales Growth (%) trend
+        ax.plot(df["Report Date"], df["Sales Growth (%)"], marker="o", linewidth=2.5,
+                color="#1f77b4", label="Sales Growth (%)")
+
+        # Add a horizontal line at zero for reference
+        ax.axhline(0, color="gray", linewidth=1, linestyle="--", alpha=0.8)
+
+        # Set axis labels and title with modern font sizes
+        ax.set_title("Yearly Sales Growth Trend", fontsize=16, fontweight="bold", pad=15)
+        ax.set_xlabel("Year", fontsize=14, labelpad=10)
+        ax.set_ylabel("Sales Growth (%)", fontsize=14, labelpad=10)
+
+        # Format the x-axis dates
+        fig.autofmt_xdate(rotation=45)
+
+        # Add grid lines for readability (already present with seaborn-whitegrid, but you can customize)
+        ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.7)
+
+        # Optionally, add annotations for each data point (if desired)
+        for x, y in zip(df["Report Date"], df["Sales Growth (%)"]):
+            if pd.notnull(y):
+                ax.annotate(f"{y:.1f}%", (x, y), textcoords="offset points", xytext=(0, 8),
+                            ha="center", fontsize=10, color="#555555")
+
+        # Add a legend with a modern frame
+        ax.legend(frameon=True, framealpha=0.9, edgecolor="gray", fontsize=12)
+
+        # Tight layout for better spacing
+        fig.tight_layout()
+
+        # Display the polished chart in Streamlit
+        st.pyplot(fig)
     
-    
-
-    # Create the Streamlit app title
-    st.title("📈 Sales Growth Trend")
-
-    # Create a polished chart
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Plot the Sales Growth (%) trend
-    ax.plot(df["Report Date"], df["Sales Growth (%)"], marker="o", linewidth=2.5,
-            color="#1f77b4", label="Sales Growth (%)")
-
-    # Add a horizontal line at zero for reference
-    ax.axhline(0, color="gray", linewidth=1, linestyle="--", alpha=0.8)
-
-    # Set axis labels and title with modern font sizes
-    ax.set_title("Yearly Sales Growth Trend", fontsize=16, fontweight="bold", pad=15)
-    ax.set_xlabel("Year", fontsize=14, labelpad=10)
-    ax.set_ylabel("Sales Growth (%)", fontsize=14, labelpad=10)
-
-    # Format the x-axis dates
-    fig.autofmt_xdate(rotation=45)
-
-    # Add grid lines for readability (already present with seaborn-whitegrid, but you can customize)
-    ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.7)
-
-    # Optionally, add annotations for each data point (if desired)
-    for x, y in zip(df["Report Date"], df["Sales Growth (%)"]):
-        if pd.notnull(y):
-            ax.annotate(f"{y:.1f}%", (x, y), textcoords="offset points", xytext=(0, 8),
-                        ha="center", fontsize=10, color="#555555")
-
-    # Add a legend with a modern frame
-    ax.legend(frameon=True, framealpha=0.9, edgecolor="gray", fontsize=12)
-
-    # Tight layout for better spacing
-    fig.tight_layout()
-
-    # Display the polished chart in Streamlit
-    st.pyplot(fig)
+    except:
+        print("Error due to lack of data")
     
             
 
