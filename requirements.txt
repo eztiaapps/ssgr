@@ -10,3 +10,4 @@ bs4
 openpyxl
 matplotlib
 yfinance
+seaborn
