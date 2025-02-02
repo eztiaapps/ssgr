@@ -17,12 +17,20 @@ layout = "wide"
 
 st.set_page_config(page_title=page_title, page_icon=page_icon, layout=layout)
 st.title(page_title + " " + page_icon)
+st.write("""
 
+        # Welcome,
+         
+         """)
 
 st.write("""
-         ### Safety Margin Test before investing
-         This app calculates the safety margin, evaluate key business numbers and helps to avoid bad investments.
+         
+         _This app calculates the safety margin, evaluate key business numbers and helps to avoid bad investments._
+         ### ...Coming soon!
          """)
+
+"---"
+
 
 # ----- Sidebar to upload file ----- #
 st.sidebar.header('Upload Stock Balance Sheet')
@@ -38,9 +46,13 @@ st.sidebar.markdown ("""
 uploaded_file = st.sidebar.file_uploader("Upload the stock balance sheet", type=["xlsx"])
 if uploaded_file is not None:
     input_df = split_excel_into_dataframes(uploaded_file)
+    file_name =  uploaded_file.name
     pnl = pnlpreprocess(input_df['PROFIT & LOSS'])
+    print(type(file_name))
+
+    st.markdown(f"### Yearly Sales Growth Trend - {file_name}")
     st.write(pnl)
-    "---"
+
     # ✅ Transpose DataFrame
     df = pnl.loc[0]
     df = df.to_frame().T
@@ -56,9 +68,14 @@ if uploaded_file is not None:
     df["Sales Growth (%)"] = df["Sales"].pct_change() * 100
 
     # ✅ Display Result
+    st.write("""
+         ### 1. Checkpoint : whether Sales growth increasing or decreasing!
+         """)
+
     st.write(df)
     
     
+
     # Create the Streamlit app title
     st.title("📈 Sales Growth Trend")
 
@@ -104,18 +121,4 @@ if uploaded_file is not None:
 "---"
 
 
-symbol = "TATAMOTORS"
 
-def currentprice(symbol):
-    url_nse = f'https://www.google.com/finance/quote/{symbol}:NSE'
-    print(url_nse)
-    response = requests.get(url_nse)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    classprice = "YMlKec fxKbKc"
-    stockprice = soup.find(class_=classprice).text
-    return stockprice
-
-cmp = currentprice(symbol)
-
-st.write(f"Current Stock Price of {"symbol"}: {currentprice(symbol)}")
