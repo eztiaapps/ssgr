@@ -1,103 +1,185 @@
 import pandas as pd
 import datetime
+from io import BytesIO
+from collections import defaultdict
 
-def split_excel_into_dataframes(file):
-    """
-    Splits an Excel sheet into multiple DataFrames based on the headers identifying separate sections.
+def read_process_excel(uploaded_file):
+    # Convert Streamlit uploaded file into a BytesIO object
+    file_stream = BytesIO(uploaded_file.getvalue())
 
-    Args:
-        file_path (str): Path to the Excel file.
+    # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
+    df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
 
-    Returns:
-        dict: A dictionary where keys are section names and values are corresponding DataFrames.
-    """
-    # Load the Excel file
-    sheet = pd.read_excel(file, sheet_name='Data Sheet', header=None)
+    # Convert all empty strings and 'NaT' values to NaN
+    df.replace(['', 'NaT'], pd.NA, inplace=True)
 
-    # Define keywords that identify the start of each data frame
-    section_keywords = ["PROFIT & LOSS", "Quarters", "BALANCE SHEET", "CASH FLOW", "DERIVED"]
+    # Drop rows where all values are NaN, NaT, or None
+    df.dropna(how='all', inplace=True)
 
-    dataframes = {}
-    current_section = None
-    current_data = []
+    # Ensure first column is not lost (reset index)
+    df.reset_index(drop=True, inplace=True)
 
-    for index, row in sheet.iterrows():
-        # Convert row values to strings for comparison
-        row_str = row.astype(str)
+    # Convert only "Report Date" rows to date format
+    df.loc[df[0] == 'Report Date', 1:] = df.loc[df[0] == 'Report Date', 1:].apply(pd.to_datetime, errors='coerce').apply(lambda x: x.dt.strftime('%Y-%m-%d'))
 
-        # Check if the row contains a section keyword
-        for keyword in section_keywords:
-            if row_str.str.contains(keyword, na=False).any():
-                # If there's an active section, save the data collected so far
-                if current_section and current_section != "PRICE":
-                    dataframes[current_section] = pd.DataFrame(current_data)
+    # Replace <NA> with 0 when the row contains other valid values
+    for idx, row in df.iterrows():
+        if row.notna().any():  # Check if at least one value is not NaN
+            df.loc[idx] = row.fillna(0)
 
-                # Start a new section
-                current_section = keyword
-                current_data = []
-                break
-        else:
-            # Handle the PRICE section specifically
-                        # Handle the PRICE: section specifically
-            if current_section == "PRICE:":
-                print('Yes')
-                first_cell = str(row[0]).strip() if not pd.isna(row[0]) else ""
-                print(first_cell)
-                if first_cell.upper() == "PRICE:":
-                    # Collect all values after the "PRICE:" cell as a list
-                    prices = row.iloc[1:].dropna().tolist()  # Use iloc to explicitly skip the first cell
-                    dataframes[current_section] = pd.DataFrame({"Price Values": prices})
-                    current_section = None  # Reset as it's a single-row section
-                continue
+    # Ensure all other columns retain original values (convert any misparsed datetime back to string)
+    for col in df.columns[1:]:  # Skip the first column (categories)
+        df[col] = df[col].astype(str)
 
+    # Add unique numbering to duplicate row names in the first column
+    name_count = defaultdict(int)
+    for idx, value in enumerate(df[0]):
+        if pd.notna(value):  # Ensure value is not NaN
+            name_count[value] += 1
+            if name_count[value] > 1:  # Only modify duplicates
+                df.at[idx, 0] = f"{value} {name_count[value]}"
 
-            # Append the row to the current section data if a section is active
-            if current_section is not None:
-                current_data.append(row.tolist())
-                
+    # **Set the first column as the index**
+    df.set_index(0, inplace=True)
 
-    # Save the last section
-    if current_section and current_section != "PRICE":
-        dataframes[current_section] = pd.DataFrame(current_data)
-        
+    # **Calculate YearlyExpenses**
+    required_rows = [
+        "Raw Material Cost", "Power and Fuel", "Other Mfr. Exp", 
+        "Employee Cost", "Selling and admin", "Other Expenses", "Change in Inventory"
+    ]
 
-    return dataframes
+    # Ensure missing rows are treated as 0
+    for row in required_rows:
+        if row not in df.index:
+            df.loc[row] = 0  # Fill missing rows with 0
 
-def pnlpreprocess(df):
-    # Set the first row (which contains the report date) as the columns
-    df.columns = df.iloc[0]
+    # Perform the formula calculation
+    df.loc["YearlyExpenses"] = (
+        df.loc["Raw Material Cost"].astype(float) + 
+        df.loc["Power and Fuel"].astype(float) + 
+        df.loc["Other Mfr. Exp"].astype(float) + 
+        df.loc["Employee Cost"].astype(float) + 
+        df.loc["Selling and admin"].astype(float) + 
+        df.loc["Other Expenses"].astype(float) - 
+        df.loc["Change in Inventory"].astype(float)
+    ).astype(str)  # Convert back to string for consistency
 
-    # Drop the first row
-    df = df.drop(index=0).reset_index(drop=True)
-
-    # Drop rows with NaN or None values
-    df = df.dropna()  # Remove any row with NaN or None
-
-    # Drop columns with NaN or None values
-    df = df.dropna(axis=1, how='any')  # Remove any column with NaN or None
-
-    # Check if the last column is completely NaN or None
-    if df.iloc[:, -1].isna().all():
-        df = df.drop(columns=df.columns[-1])
-
-    # Function to check if a value is a valid date and remove time
-    def clean_date_column(col):
-        try:
-            # Try to convert to datetime, remove time, and return date
-            return pd.to_datetime(col).date()
-        except ValueError:
-            # If it's not a date, return the original value (like 'Report Date')
-            return col
-
-    # Apply the cleaning function to the column names
-    df.columns = [clean_date_column(col) for col in df.columns]
-    
     return df
 
-# Example usage
-# file_path = "path_to_your_file.xlsx"
-# dataframes = split_excel_into_dataframes(file_path)
-# for name, df in dataframes.items():
-#     print(f"DataFrame for section: {name}")
-#     print(df.head())
+
+
+#Again higher the version, it is working. Don't delete it.
+def read_process_excel3(uploaded_file):
+    # Convert Streamlit uploaded file into a BytesIO object
+    file_stream = BytesIO(uploaded_file.getvalue())
+
+    # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
+    df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
+
+    # Convert all empty strings and 'NaT' values to NaN
+    df.replace(['', 'NaT'], pd.NA, inplace=True)
+
+    # Drop rows where all values are NaN, NaT, or None
+    df.dropna(how='all', inplace=True)
+
+    # Ensure first column is not lost (reset index)
+    df.reset_index(drop=True, inplace=True)
+
+    # Convert only "Report Date" rows to date format
+    df.loc[df[0] == 'Report Date', 1:] = df.loc[df[0] == 'Report Date', 1:].apply(pd.to_datetime, errors='coerce').apply(lambda x: x.dt.strftime('%Y-%m-%d'))
+
+    # Replace <NA> with 0 when the row contains other valid values
+    for idx, row in df.iterrows():
+        if row.notna().any():  # Check if at least one value is not NaN
+            df.loc[idx] = row.fillna(0)
+
+    # Ensure all other columns retain original values (convert any misparsed datetime back to string)
+    for col in df.columns[1:]:  # Skip the first column (categories)
+        df[col] = df[col].astype(str)
+
+    # Add unique numbering to duplicate row names in the first column
+    name_count = defaultdict(int)
+    for idx, value in enumerate(df[0]):
+        if pd.notna(value):  # Ensure value is not NaN
+            name_count[value] += 1
+            if name_count[value] > 1:  # Only modify duplicates
+                df.at[idx, 0] = f"{value} {name_count[value]}"
+
+    # **Set the first column as the index**
+    df.set_index(0, inplace=True)
+
+    return df
+
+
+
+#Don't delete this function. It is working. TODO
+def read_process_excel2(uploaded_file):
+    # Convert Streamlit uploaded file into a BytesIO object
+    file_stream = BytesIO(uploaded_file.getvalue())
+
+    # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
+    df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
+
+    # Convert all empty strings and 'NaT' values to NaN
+    df.replace(['', 'NaT'], pd.NA, inplace=True)
+
+    # Drop rows where all values are NaN, NaT, or None
+    df.dropna(how='all', inplace=True)
+
+    # Ensure first column is not lost (reset index)
+    df.reset_index(drop=True, inplace=True)
+
+    # Convert only "Report Date" rows to date format
+    df.loc[df[0] == 'Report Date', 1:] = df.loc[df[0] == 'Report Date', 1:].apply(pd.to_datetime, errors='coerce').apply(lambda x: x.dt.strftime('%Y-%m-%d'))
+
+    # Replace <NA> with 0 when the row contains other valid values
+    for idx, row in df.iterrows():
+        if row.notna().any():  # Check if at least one value is not NaN
+            df.loc[idx] = row.fillna(0)
+
+    # Ensure all other columns retain original values (convert any misparsed datetime back to string)
+    for col in df.columns[1:]:  # Skip the first column (categories)
+        df[col] = df[col].astype(str)
+
+    # Add unique numbering to duplicate row names in the first column
+    name_count = defaultdict(int)
+    for idx, value in enumerate(df[0]):
+        if pd.notna(value):  # Ensure value is not NaN
+            name_count[value] += 1
+            if name_count[value] > 1:  # Only modify duplicates
+                df.at[idx, 0] = f"{value} {name_count[value]}"
+
+    return df
+
+
+
+def read_process_excel_backup(uploaded_file):
+    # Convert Streamlit uploaded file into a BytesIO object
+    file_stream = BytesIO(uploaded_file.getvalue())
+
+    # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
+    df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
+
+    # Drop rows where all values are NaN, NaT, or None
+    # Convert all empty strings and 'NaT' values to NaN
+    df.replace(['', 'NaT'], pd.NA, inplace=True)
+
+    # Drop rows where ALL values are NaN, NaT, or None
+    df.dropna(how='all', inplace=True)
+
+    # Ensure first column is not lost
+    df.reset_index(drop=True, inplace=True)  # Reset index to prevent shifting issues
+
+    # Iterate over the rows to convert <NA> to 0 when there are other valid values
+    for idx, row in df.iterrows():
+        if row.notna().any():  # Check if any value in the row is not NaN or NaT
+            # Replace <NA> with 0 for the entire row if it's not all NaN/NaT
+            df.loc[idx] = row.fillna(0)
+    
+    # Ensure all other columns retain original values (convert any misparsed datetime back to string)
+    for col in df.columns[1:]:  # Skip Report Date column
+        df[col] = df[col].astype(str)
+
+    
+    return df
 

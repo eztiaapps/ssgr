@@ -9,6 +9,7 @@ __pycache__/
 bugs.txt
 deploychecklist.txt
 development.txt
+data/
 
 # C extensions
 *.so

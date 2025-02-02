@@ -3,8 +3,9 @@ import pandas as pd
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
-from splfunction import split_excel_into_dataframes, pnlpreprocess
+from splfunction import read_process_excel
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 #---------------Settings ----------------------#
@@ -45,79 +46,46 @@ st.sidebar.markdown ("""
 # Collects the stock csv file from user
 uploaded_file = st.sidebar.file_uploader("Upload that stock balance sheet here", type=["xlsx"])
 if uploaded_file is not None:
-    input_df = split_excel_into_dataframes(uploaded_file)
-    file_name =  uploaded_file.name
-    try:
-        pnl = pnlpreprocess(input_df['PROFIT & LOSS'])
-        print(type(file_name))
+    df = read_process_excel(uploaded_file)
+    file_name =  uploaded_file.name.split('.')[0]
 
-        st.markdown(f"### Yearly Sales Growth Trend - {file_name}")
-        st.write(pnl)
-
-        # ✅ Transpose DataFrame
-        df = pnl.loc[0]
-        df = df.to_frame().T
-        df = df.set_index("Report Date").T.reset_index()
-
-        # ✅ Rename Columns
-        df.columns = ["Report Date", "Sales"]
-
-        # ✅ Convert Data Types
-        df["Report Date"] = pd.to_datetime(df["Report Date"])  # Convert to DateTime
-        df["Sales"] = pd.to_numeric(df["Sales"], errors="coerce")  # Convert to Float
-        #✅ Calculate Sales Growth (%)
-        df["Sales Growth (%)"] = df["Sales"].pct_change() * 100
-
-        # ✅ Display Result
-        st.write("""
-            ### 1. Checkpoint : whether Sales growth increasing or decreasing!
-            """)
-
-        st.write(df)
-        
-        
-
-        # Create the Streamlit app title
-        st.title("📈 Sales Growth Trend")
-
-        # Create a polished chart
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Plot the Sales Growth (%) trend
-        ax.plot(df["Report Date"], df["Sales Growth (%)"], marker="o", linewidth=2.5,
-                color="#1f77b4", label="Sales Growth (%)")
-
-        # Add a horizontal line at zero for reference
-        ax.axhline(0, color="gray", linewidth=1, linestyle="--", alpha=0.8)
-
-        # Set axis labels and title with modern font sizes
-        ax.set_title("Yearly Sales Growth Trend", fontsize=16, fontweight="bold", pad=15)
-        ax.set_xlabel("Year", fontsize=14, labelpad=10)
-        ax.set_ylabel("Sales Growth (%)", fontsize=14, labelpad=10)
-
-        # Format the x-axis dates
-        fig.autofmt_xdate(rotation=45)
-
-        # Add grid lines for readability (already present with seaborn-whitegrid, but you can customize)
-        ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.7)
-
-        # Optionally, add annotations for each data point (if desired)
-        for x, y in zip(df["Report Date"], df["Sales Growth (%)"]):
-            if pd.notnull(y):
-                ax.annotate(f"{y:.1f}%", (x, y), textcoords="offset points", xytext=(0, 8),
-                            ha="center", fontsize=10, color="#555555")
-
-        # Add a legend with a modern frame
-        ax.legend(frameon=True, framealpha=0.9, edgecolor="gray", fontsize=12)
-
-        # Tight layout for better spacing
-        fig.tight_layout()
-
-        # Display the polished chart in Streamlit
-        st.pyplot(fig)
+    st.write("1. Checkpoint: Did Expense increase with Sales?")
+    st.write(f"""
+             # Sales vs Yearly Expenses... {file_name}
+             """)
     
-    except:
-        print("Error due to lack of data")
+    # Extract sales and expenses data
+    if "Sales" in df.index and "YearlyExpenses" in df.index:
+        sales_data = df.loc["Sales"].astype(float)
+        expenses_data = df.loc["YearlyExpenses"].astype(float)
+        report_dates = df.loc["Report Date"].tolist()  # Extract report dates
+
+        # Convert report dates to actual datetime
+        report_dates = pd.to_datetime(report_dates, errors="coerce")
+
+        # Plot the data
+        fig, ax = plt.subplots(figsize=(10, 5))
+        fig.patch.set_alpha(0.05)  # Make figure background transparent
+        ax.set_facecolor("none")  # Make plot area transparent
+        sns.lineplot(x=report_dates, y=sales_data, marker="o", label="Sales", ax=ax)
+        sns.lineplot(x=report_dates, y=expenses_data, marker="s", label="YearlyExpenses", ax=ax)
+
+        ax.set_title("Sales vs Yearly Expenses Trend", fontsize=14)
+        ax.set_xlabel("Report Date", fontsize=12)
+        ax.set_ylabel("Amount", fontsize=12)
+        ax.legend()
+        # **Lighter Grid**
+        ax.grid(True, linestyle="--", linewidth=0.3, alpha=0.2, color="white")  # Fainter grid lines
+
+        # Remove the white background
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        # Show the chart
+        st.pyplot(fig)
+    else:
+        st.error("Sales or YearlyExpenses data is missing!")
+    
     
             
 
