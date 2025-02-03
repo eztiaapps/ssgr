@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+
+
+
 #---------------Settings ----------------------#
 currency = "INR"
 page_title = "DataLotus Dashboard"
@@ -68,7 +71,7 @@ if uploaded_file is not None:
 
     st.write("1. Checkpoint: Did Expense increase with Sales?")
     st.write(f"""
-             # Sales vs Yearly Expenses... {file_name}
+             # Sales vs Yearly Expenses : {file_name}
              """)
     
     # Extract sales and expenses data
@@ -84,12 +87,19 @@ if uploaded_file is not None:
         fig, ax = plt.subplots(figsize=(10, 5))
         fig.patch.set_alpha(0.05)  # Make figure background transparent
         ax.set_facecolor("none")  # Make plot area transparent
-        sns.lineplot(x=report_dates, y=sales_data, marker="o", label="Sales", ax=ax)
-        sns.lineplot(x=report_dates, y=expenses_data, marker="s", label="YearlyExpenses", ax=ax)
 
-        ax.set_title("Sales vs Yearly Expenses Trend", fontsize=14)
-        ax.set_xlabel("Report Date", fontsize=12)
-        ax.set_ylabel("Amount", fontsize=12)
+        # White legend text
+        legend = ax.legend(facecolor="none")
+        for text in legend.get_texts():
+            text.set_color("white")
+
+
+        sns.lineplot(x=report_dates, y=sales_data, marker="o", label="Sales", ax=ax, color="blue")
+        sns.lineplot(x=report_dates, y=expenses_data, marker="s", label="YearlyExpenses", ax=ax, color="red")
+
+        ax.set_title("Sales vs Yearly Expenses Trend", fontsize=14, color="white")
+        ax.set_xlabel("Report Date", fontsize=12, color="white")
+        ax.set_ylabel("Amount (Cr.)", fontsize=12, color="white")
         ax.legend()
         # **Lighter Grid**
         ax.grid(True, linestyle="--", linewidth=0.3, alpha=0.2, color="white")  # Fainter grid lines
@@ -97,17 +107,78 @@ if uploaded_file is not None:
         # Remove the white background
         for spine in ax.spines.values():
             spine.set_visible(False)
+        
+        # Set white color for X and Y ticks
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
 
         # Show the chart
         st.pyplot(fig)
+
     else:
         st.error("Sales or YearlyExpenses data is missing!")
-    
-    
+
+                
+    "---"
+    st.write(f"""
+             # Sales vs Expenses vs Operating Profit
+             """)
+
+    # **Step 1: Calculate Operating Profit**
+    if "Sales" in df.index and "YearlyExpenses" in df.index:
+        df.loc["Operating Profit"] = df.loc["Sales"].astype(float) - df.loc["YearlyExpenses"].astype(float)
+
+    # **Step 2: Extract data for plotting**
+        if all(key in df.index for key in ["Sales", "YearlyExpenses", "Operating Profit"]):
+            sales_data = df.loc["Sales"].astype(float)
+            expenses_data = df.loc["YearlyExpenses"].astype(float)
+            profit_data = df.loc["Operating Profit"].astype(float)
+            report_dates = pd.to_datetime(df.loc["Report Date"].tolist(), errors="coerce")
+
+            # **Step 3: Plot the data**
+            fig, ax = plt.subplots(figsize=(10, 5))
+            fig.patch.set_alpha(0)  # Transparent figure background
+            ax.set_facecolor("none")  # Transparent plot area
             
+            # White legend text
+            legend = ax.legend(facecolor="none")
+            for text in legend.get_texts():
+                text.set_color("white")
 
 
-"---"
+            # Plot Sales, Expenses, and Profit
+            sns.lineplot(x=report_dates, y=sales_data, marker="o", label="📈 Sales", ax=ax, color="blue")
+            sns.lineplot(x=report_dates, y=expenses_data, marker="s", label="💰 YearlyExpenses", ax=ax, color="red")
+            sns.lineplot(x=report_dates, y=profit_data, marker="^", label="🚀 Operating Profit", ax=ax, color="green")
+
+            ax.set_title("Sales, Expenses & Operating Profit Trend", fontsize=14, color="white")
+            ax.set_xlabel("Report Date", fontsize=12, color="white")
+            ax.set_ylabel("Amount(Cr.)", fontsize=12, color="white")
+            ax.legend()  # Transparent legend
+
+            # Lighter Grid
+            ax.grid(True, linestyle="--", linewidth=0.3, alpha=0.2, color="white")
+
+            # Remove Borders
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+            
+            # Set white color for X and Y ticks
+            ax.tick_params(axis='x', colors='white')
+            ax.tick_params(axis='y', colors='white')
+
+            # Show the transparent chart
+            st.pyplot(fig)
+
+            # Mark chart as drawn
+            st.session_state.chart_drawn = True
+        else:
+            st.error("Sales, YearlyExpenses, or Operating Profit data is missing!")
+
+    else:
+        st.warning("Upload a file to display the chart.")
+
+
 
 
 
