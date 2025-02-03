@@ -30,7 +30,7 @@ st.write("""
 st.write("""
          
          _This app calculates the safety margin, evaluate key business numbers and helps to avoid bad investments._
-         ### ...Coming soon!
+         ### ...Under Construction...!
          """)
 
 "---"
