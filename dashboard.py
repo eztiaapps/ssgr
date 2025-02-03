@@ -43,8 +43,25 @@ st.sidebar.markdown ("""
                      - ### Step 4: Click the "Export to Excel"
                      """)
 
+
+# Function to reset state when the file changes (1)
+def reset_state():
+    st.session_state.df = None  # Reset DataFrame
+    st.session_state.chart_drawn = False  # Reset chart status
+
+# Track the previously uploaded file (2)
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+
+
 # Collects the stock csv file from user
 uploaded_file = st.sidebar.file_uploader("Upload that stock balance sheet here", type=["xlsx"])
+
+# Check if file was removed or changed (3)
+if uploaded_file != st.session_state.uploaded_file:
+    reset_state()  # Reset everything
+    st.session_state.uploaded_file = uploaded_file  # Update file in session state
+
 if uploaded_file is not None:
     df = read_process_excel(uploaded_file)
     file_name =  uploaded_file.name.split('.')[0]
