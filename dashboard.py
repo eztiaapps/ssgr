@@ -9,15 +9,44 @@ import pandas as pd
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
-from splfunction import read_process_excel, plot_growth_vs_bsr
 import matplotlib.pyplot as plt
 import seaborn as sns
+from splfunction import *
+
+
+# Streamlit Page Configuration
+st.set_page_config(
+    page_title="Streamly - An Intelligent Streamlit Assistant",
+    page_icon="imgs/avatar_streamly.png",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items={
+        "Get help": "https://github.com/AdieLaine/Streamly",
+        "Report a bug": "https://github.com/AdieLaine/Streamly",
+        "About": """
+            ## Streamly Streamlit Assistant
+            ### Powered using GPT-4o-mini
+
+            **GitHub**: https://github.com/AdieLaine/
+
+            The AI Assistant named, Streamly, aims to provide the latest updates from Streamlit,
+            generate code snippets for Streamlit widgets,
+            and answer questions about Streamlit's latest features, issues, and more.
+            Streamly has been trained on the latest Streamlit updates and documentation.
+        """
+    }
+)
+
+# Function to reset session state when file is removed
+def reset_state():
+    st.session_state.uploaded_file = None
+    st.session_state.df = None  # Reset dataframe
 
 
 def display_disclaimer():
     """Display the latest disclaimer of the Portfolio Assistant."""
     with st.expander("Portfolio Assistant 1.0 Announcement", expanded=False):
-        st.markdown("For more details on this version, check out the [Disclaimer](https://docs.streamlit.io/library/changelog#version).")
+        st.markdown("For more details on this version, check out the [Disclaimer](https://github.com/eztiaapps/ssgr/blob/main/disclaimer.txt).")
 
 # Streamlit Title
 st.title("Datalotus Portfolio Assistant")
@@ -101,9 +130,81 @@ def main():
 
     st.sidebar.markdown("---")
 
+    with st.expander(("About Datalotus Portfolio Assistant")):
+
+        st.markdown((
+            """
+        The **#Datalotus Portfolio Assistant** is an AI powered portfolio analysis tool.
+        Like a lotus blooms in murky water, 1 really **good stock** can be mixed with 99 other **good looking** stocks.!
+        
+        ### Particularly, we use this tool to:
+        - Avoid bad investments! No investment is better than speculating or jump on rallies or catching falling knives!
+        - Do our own stock's fundamental analysis
+        - Focus on business performance rather than market speculation or sentiments.
+        - Learn about all the correct fundamentally strong stocks with simple indicators.
+        - We will display for green and red flags based on the stock's balance sheet uploaded below.
+        - Please read our [Disclaimer](https://github.com/eztiaapps/ssgr/blob/main/disclaimer.txt).
+        """
+        ))
+
+    
+
+       
+
     if source == "Screener":
-        st.header("Welcome")
+        st.header("Welcome to the world of possibilities!")
+        "---"
+
+        st.write("""
+
+        #### Upload the stock's balance sheet 📈,
+         
+         """)
+        
+        # Sidebar file uploader
+        uploaded_file = st.file_uploader("Upload that stock balance sheet here", type=["xlsx"])
+
+        # Check if file was removed or changed
+        if "uploaded_file" not in st.session_state:
+            st.session_state.uploaded_file = None
+
+        if "df" not in st.session_state:
+            st.session_state.df = None  # Initialize empty
+
+        # If file is removed, reset session state and force rerun
+        if uploaded_file is None and st.session_state.uploaded_file is not None:
+            reset_state()
+            st.rerun()  # Forces Streamlit to refresh the UI
+
+        # If a new file is uploaded, process it
+        if uploaded_file is not None and uploaded_file != st.session_state.uploaded_file:
+            st.session_state.uploaded_file = uploaded_file  # Store new file
+            st.session_state.df = read_process_excel(uploaded_file)  # Process Excel file
+        
+        # Display checkpoint info if DataFrame exists
+        if st.session_state.df is not None:
+            df = st.session_state.df
+            file_name = uploaded_file.name.split('.')[0]
+
+            st.write("1. Checkpoint: Is Sales higher than BSR?")
+            st.write(f"# Sales vs Business Sustainability: {file_name}")
+
+            # Display DataFrame
+            st.write(df)
+            "---"
+
+            # Call the plotting function
+            plot_growth_vs_bsr(df)
+        
+
+
+
+        
     else:
+        st.markdown("""
+                    This part of the site is under construction!
+                    In the meanwhile, you can read our Disclaimer to use this site!
+                    """)
         display_disclaimer()
         
 
