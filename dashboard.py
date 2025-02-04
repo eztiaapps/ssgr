@@ -68,7 +68,7 @@ if uploaded_file is not None:
     df = read_process_excel(uploaded_file)
     file_name =  uploaded_file.name.split('.')[0]
 
-    st.write("1. Checkpoint: Did Expense increase with Sales?")
+    st.write("1. Checkpoint: Is Sales higher than BSR?")
     st.write(f"""
              # Sales vs Business Sustainability : {file_name}
              """)
@@ -101,7 +101,7 @@ if uploaded_file is not None:
     plt.plot(report_dates, bsr, label="BSR", color='#ffeb3b', linewidth=3)  # Bright yellow
 
     # Customize font properties for a modern look
-    plt.title("Growth Trends: Sales, Yearly Expenses & BSR", fontsize=18, color='white', fontweight='bold')
+    plt.title("Growth Trends: Sales & BSR", fontsize=18, color='white', fontweight='bold')
     plt.xlabel("Year", fontsize=14, color='white')
     plt.ylabel("Values", fontsize=14, color='white')
 
