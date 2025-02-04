@@ -176,7 +176,7 @@ def main():
             st.write("# Report Summary")
             st.write(f"### _Let's score this business: {file_name}_")
             "---"
-            st.write(df)
+            #st.write(df)  #Comment Uncomment to show raw data for testing purpose.
             # Assume df is already loaded and processed
             if "Report Date" in df.index:
                 st.subheader("Individual Growth Scores")
@@ -224,6 +224,9 @@ def main():
             # Display DataFrame
             # TODO: Intrinsic Value and Safety Margin
             #ReportSummary(df)
+            "---"
+            st.write ("# Target Price Section and duration probability")
+            st.write("...work in progress 🚜👷🚧🏗️")
             "---"
 
 
