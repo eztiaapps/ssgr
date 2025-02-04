@@ -29,7 +29,7 @@ st.write("""
 st.write("""
          
          _This app calculates the safety margin, BSR, evaluate key business numbers and helps to avoid bad investments._
-         ### ...Under Construction...!
+         ### ...Beware! If BSR line is below Sales line...!
          """)
 
 "---"
