@@ -11,7 +11,9 @@ import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import seaborn as sns
-from splfunction import *
+from splfunction import plot_growth_vs_bsr, read_process_excel, ReportSummary, calculate_growth_score, display_score, calculate_overall_score
+from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
+
 
 
 # Streamlit Page Configuration
@@ -186,15 +188,62 @@ def main():
             df = st.session_state.df
             file_name = uploaded_file.name.split('.')[0]
 
-            st.write("1. Checkpoint: Is Sales higher than BSR?")
-            st.write(f"# Sales vs Business Sustainability: {file_name}")
+            st.write("# Report Summary")
+            st.write(f"### _Let's score this business: {file_name}_")
+            "---"
+            st.write(df)
+            # Assume df is already loaded and processed
+            if "Report Date" in df.index:
+                st.subheader("Individual Growth Scores")
+                
+                all_scores = []
+
+                # Manually call the function for each metric
+                for metric in POSITIVE_METRICS + NEGATIVE_METRICS:
+                    st.subheader(f"{metric} Growth Score")
+                    score_5_years = display_score(metric, df, 5)
+                    score_3_years = display_score(metric, df, 3)
+
+                    # Collect scores for overall calculation
+                    if score_5_years is not None:
+                        all_scores.append(score_5_years)
+                    if score_3_years is not None:
+                        all_scores.append(score_3_years)
+
+                # Calculate overall score
+                overall_score = calculate_overall_score(all_scores)
+
+                if overall_score is not None:
+                    st.subheader("Overall Growth Score")
+
+                    st.slider("Overall Growth Score", 0, 100, int(overall_score), disabled=True, format="%d")
+
+                    # Assign color based on score
+                    if overall_score < 34:
+                        color = "red"
+                        label = "Poor"
+                    elif overall_score < 67:
+                        color = "orange"
+                        label = "Average"
+                    else:
+                        color = "green"
+                        label = "Good"
+
+                    st.markdown(f"<span style='color:{color}; font-size:22px; font-weight:bold'>{label}</span>", unsafe_allow_html=True)
+                else:
+                    st.warning("Not enough data for overall score calculation.")
+
+            else:
+                st.warning("Report Date data not found in DataFrame.")
 
             # Display DataFrame
-            st.write(df)
+            # TODO: Intrinsic Value and Safety Margin
+            #ReportSummary(df)
             "---"
 
-            # Call the plotting function
-            plot_growth_vs_bsr(df)
+
+
+    
         
 
 

@@ -4,6 +4,9 @@ from io import BytesIO
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import streamlit as st
+import numpy as np
+from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
+
 
 def read_process_excel(uploaded_file):
     # Convert Streamlit uploaded file into a BytesIO object
@@ -237,6 +240,114 @@ def plot_growth_vs_bsr(df):
 
     # Show the plot in Streamlit
     st.pyplot(plt)
+
+
+def ReportSummary(df):
+    st.write("TODO: Report Summary")
+
+
+def calculate_growth_score(df, metric, years=5):
+    """Calculate a weighted growth score for a given metric over a specified period."""
+
+    if metric not in df.index or "Report Date" not in df.index:
+        return None  # Return None if data or metric is missing
+
+    # Convert 'Report Date' to datetime and sort by date
+    report_dates = pd.to_datetime(df.loc["Report Date"], errors='coerce')
+    metric_data = df.loc[metric].astype(float)
+
+    # Drop columns with invalid dates
+    valid_mask = report_dates.notna()
+    report_dates = report_dates[valid_mask]
+    metric_data = metric_data[valid_mask]
+
+    # Sort data in chronological order (oldest to latest)
+    sorted_indices = report_dates.argsort()
+    report_dates = report_dates.iloc[sorted_indices]
+    metric_data = metric_data.iloc[sorted_indices]
+
+    # Determine the latest available year
+    latest_year = report_dates.dt.year.max()
+    target_years = list(range(latest_year, latest_year - years, -1))
+
+    # Filter data to only include the target years
+    metric_filtered = metric_data[report_dates.dt.year.isin(target_years)]
+    report_filtered = report_dates[report_dates.dt.year.isin(target_years)]
+
+    # Ensure we have enough periods for calculation
+    periods = min(len(metric_filtered) - 1, years - 1)
+    if periods < 2:
+        return None  # Not enough data
+
+    # Calculate Year-over-Year Growth (%)
+    growth_rates = []
+    for i in range(1, periods + 1):
+        prev_value = metric_filtered.iloc[i - 1]
+        curr_value = metric_filtered.iloc[i]
+
+        if prev_value == 0:
+            growth_rate = 0  # Avoid division by zero
+        else:
+            growth_rate = ((curr_value - prev_value) / abs(prev_value)) * 100
+
+        # If it's a negative metric, invert the impact (growth is bad, reduction is good)
+        if metric in NEGATIVE_METRICS:
+            growth_rate = -growth_rate  # Invert logic: Higher growth is bad, reduction is good
+
+        growth_rates.append(growth_rate)
+
+    # Apply weighting (more recent years have higher weight)
+    weights = np.arange(periods, 0, -1)  # Example: [5, 4, 3, 2, 1] for 5 years
+    weighted_growth = np.dot(growth_rates, weights) / weights.sum()
+
+    # Normalize score between 0-100 (assuming min/max range)
+    min_score, max_score = -50, 50  # Define reasonable bounds for scaling
+    normalized_score = np.clip((weighted_growth - min_score) / (max_score - min_score) * 100, 0, 100)
+
+    return round(normalized_score, 2)
+
+
+def display_score(metric, df, years):
+    """Display growth score with color-coded rating."""
+    score = calculate_growth_score(df, metric, years)
+    
+    if score is not None:
+        # Adjust for negative impact metrics
+        if metric in NEGATIVE_METRICS:
+            score = 100 - score  # Invert score for metrics where lower is better
+
+        score_value = st.slider(
+            f"{metric} Growth Score ({years} Years)", 0, 100, int(score),
+            disabled=True, format="%d"
+        )
+        
+        # Assign color based on score
+        if score_value < 34:
+            color = "red"
+            label = "Poor"
+        elif score_value < 67:
+            color = "orange"
+            label = "Average"
+        else:
+            color = "green"
+            label = "Good"
+        
+        # Display colored rating
+        st.markdown(f"<span style='color:{color}; font-size:18px; font-weight:bold'>{label}</span>", unsafe_allow_html=True)
+        return score
+    else:
+        st.warning(f"Not enough data for {metric} ({years} Years)")
+        return None
+
+def calculate_overall_score(scores):
+    """Compute the overall score as an average of available metric scores."""
+    valid_scores = [s for s in scores if s is not None]
+    
+    if valid_scores:
+        return round(sum(valid_scores) / len(valid_scores), 2)
+    return None
+
+
 
 
 
