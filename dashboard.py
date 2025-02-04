@@ -225,7 +225,7 @@ def main():
             # TODO: Intrinsic Value and Safety Margin
             #ReportSummary(df)
             "---"
-            st.write ("# Target Price Section and duration probability")
+            st.write ("# Target Price Section and target ETA probability")
             st.write("...work in progress 🚜👷🚧🏗️")
             "---"
 
