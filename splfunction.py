@@ -173,13 +173,6 @@ def read_process_excel(uploaded_file):
         df.loc["BSR"] = bsr
 
     
-
-
-
-
-
-    
-
     return df
 
 
