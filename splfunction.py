@@ -170,7 +170,7 @@ def read_process_excel(uploaded_file):
         bsr = avg_nfat_3y * avg_npm_3y * (1 - avg_dpr_3y) - avg_dep_3y
 
         # Store result in the dataframe
-        df.loc["BSR"] = bsr
+        df.loc["BSR"] = bsr * 100
 
     
     return df
