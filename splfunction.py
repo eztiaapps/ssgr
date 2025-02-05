@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
+import os
 
-
+#Read the csv balance sheet, and process the file and parse it. Then calculates additionals rows of information like BSR.
 def read_process_excel(uploaded_file):
     # Convert Streamlit uploaded file into a BytesIO object
     file_stream = BytesIO(uploaded_file.getvalue())
@@ -347,7 +348,26 @@ def calculate_overall_score(scores):
         return round(sum(valid_scores) / len(valid_scores), 2)
     return None
 
+def colored_text(text, color):
+    return f"<p style='color:{color}; font-size:18px;'>{text}</p>"
 
+
+# Function to read the visitor count from file 
+counter_file = './visitor_counter.txt'
+def get_visitor_count():
+    if os.path.exists(counter_file):
+        with open(counter_file, 'r') as file:
+            return int(file.read())  # Read the count from the file
+    else:
+        return 0  # If the file doesn't exist, it's the first visit
+
+# Function to increment and update the visitor count
+def increment_visitor_count():
+    current_count = get_visitor_count()
+    new_count = current_count + 1  # Increment the count
+    with open(counter_file, 'w') as file:
+        file.write(str(new_count))  # Write the updated count back to the file
+    return new_count
 
 
 

@@ -11,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import seaborn as sns
-from splfunction import plot_growth_vs_bsr, read_process_excel, ReportSummary, calculate_growth_score, display_score, calculate_overall_score
+from splfunction import *
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
 
 
@@ -149,7 +149,10 @@ def main():
          """)
         
         # Sidebar file uploader
-        uploaded_file = st.file_uploader("Upload that stock balance sheet here", type=["xlsx"])
+        uploaded_file = st.file_uploader("Upload here", type=["xlsx"])
+        # Increment and display the visitor count
+        visitor_count = get_visitor_count()
+        st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far!")
 
         # Check if file was removed or changed
         if "uploaded_file" not in st.session_state:
@@ -167,11 +170,13 @@ def main():
         if uploaded_file is not None and uploaded_file != st.session_state.uploaded_file:
             st.session_state.uploaded_file = uploaded_file  # Store new file
             st.session_state.df = read_process_excel(uploaded_file)  # Process Excel file
+            visitor_count = increment_visitor_count()
+            
         
         # Display checkpoint info if DataFrame exists
         if st.session_state.df is not None:
             df = st.session_state.df
-            file_name = uploaded_file.name.split('.')[0]
+            file_name = uploaded_file.name.split('.')[0].upper()
 
             st.write("# Report Summary")
             st.write(f"### _Let's score this business: {file_name}_")
@@ -202,6 +207,8 @@ def main():
                     st.subheader("Overall Growth Score")
 
                     st.slider("Overall Growth Score", 0, 100, int(overall_score), disabled=True, format="%d")
+                    
+
 
                     # Assign color based on score
                     if overall_score < 34:
@@ -213,7 +220,8 @@ def main():
                     else:
                         color = "green"
                         label = "Good"
-
+                    
+                    st.markdown(colored_text(f"Overall Score is: {overall_score}, It must be Good only then we can consider {file_name} for investment!", 'Red'), unsafe_allow_html=True)
                     st.markdown(f"<span style='color:{color}; font-size:22px; font-weight:bold'>{label}</span>", unsafe_allow_html=True)
                 else:
                     st.warning("Not enough data for overall score calculation.")
@@ -227,9 +235,9 @@ def main():
             "---"
             st.write ("# Target Price Section and target ETA probability")
             st.write("...work in progress 🚜👷🚧🏗️")
+
             "---"
-
-
+            
 
     
         
@@ -243,7 +251,10 @@ def main():
                     In the meanwhile, you can read our Disclaimer to use this site!
                     """)
         display_disclaimer()
-        
+
+
+
+
 
     
 if __name__ == "__main__":
