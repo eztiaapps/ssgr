@@ -48,6 +48,7 @@ def img_to_base64(image_path):
         return None
 
 
+
 def main():
     """
     Analyses a stock and provides buy and signal weighted factors for decision making.
@@ -248,8 +249,39 @@ def main():
                         color = "green"
                         label = "Good"
                     
-                    st.markdown(colored_text(f"Overall Score is: {overall_score}, It must be Good only then we can consider {file_name} for investment!", 'Red'), unsafe_allow_html=True)
+                    st.markdown(colored_text(f"Overall Score is: {overall_score}, for {file_name}", 'Red'), unsafe_allow_html=True)
+                    st.markdown(colored_text(f"It must be Good, only then we can consider a company for investment!", 'orange'), unsafe_allow_html=True)
                     st.markdown(f"<span style='color:{color}; font-size:22px; font-weight:bold'>{label}</span>", unsafe_allow_html=True)
+
+                    "---"
+                    st.markdown("<br><br>", unsafe_allow_html=True)  # Adds vertical space
+
+                    #Collect comment and user feedback
+                    COMMENTS_FILE = "comments.txt"
+
+
+                    # Comment Section
+                    st.subheader("💬 Share Your Feedback on the analysis")
+
+                    with st.form(key="comment_form"):
+                        email = st.text_input("📧 Email (Required)", placeholder="Enter your email")
+                        phone = st.text_input("📱 Phone Number (Optional)", placeholder="Enter your phone number")
+                        user_comment = st.text_area("📝 Your Feedback", placeholder="Write your comment here...")
+
+                        submit_comment = st.form_submit_button("Submit")
+
+                        if submit_comment:
+                            if not email.strip():
+                                st.error("❌ Email is required to submit feedback. So that we can connect with you")
+                            elif not user_comment.strip():
+                                st.warning("⚠️ Please enter a valid comment before submitting.")
+                            else:
+                                save_comment(email, phone, user_comment)
+                                st.success("✅ Comment submitted successfully!")
+                                st.markdown(f"**Your Comment:** _{user_comment}_")
+
+
+
                 else:
                     st.warning("Not enough data for overall score calculation.")
 
@@ -279,6 +311,12 @@ def main():
 
 
 
+
+
+
     
 if __name__ == "__main__":
     main()
+    
+
+    
