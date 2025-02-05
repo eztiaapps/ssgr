@@ -139,17 +139,39 @@ def main():
        
 
     if source == "Screener":
-        st.header("Welcome to the world of possibilities!")
+        st.markdown(
+            "<h1 style='text-align: center; font-family: Times New Roman, serif; color: cyan;'>Welcome to the World of Possibilities!</h1>",
+            unsafe_allow_html=True
+        )   
         "---"
 
-        st.write("""
 
-        #### Upload the stock's balance sheet 📈,
-         
-         """)
+        st.markdown(
+            """
+            <div style="text-align: center; font-family: Times New Roman, serif;">
+                <h2 style="font-size: 26px; font-family: Times New Roman, serif;">How to use the Stock Balance Sheet and Datalotus Assistant to decide whether to invest or avoid?</h2>
+                <h4 style="text-align: left; font-family: Times New Roman, serif; color: yellow">These 3 Signals are must!</h4>
+                <ul style="text-align: left;">
+                    <li><b>1. Overall Growth Score must be Good, Not Average, Not Poor!</b></li>
+                    <li><b>2. BSR Growth and Sales Growth <i>both</i> must be Good, Not Average, Not Poor!</b></li>
+                    <li><b>3. Target Price should have Safety Margin of at least 30%. [...Coming soon!]</b></li>
+                </ul>
+                
+            </div>
+            <p>If any of the above 3 is missing, we avoid that stock, & choose another one!</p>
+            """,
+            unsafe_allow_html=True
+        )
+
+        "---"
+
+        st.markdown(
+            f"<h3 style='text-align: center; font-family: Times New Roman, serif;'>Upload the stock's balance sheet 📈</h3>",
+            unsafe_allow_html=True
+        )
         
         # Sidebar file uploader
-        uploaded_file = st.file_uploader("Upload here", type=["xlsx"])
+        uploaded_file = st.file_uploader("Please upload here:", type=["xlsx"])
         # Increment and display the visitor count
         visitor_count = get_visitor_count()
         st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far!")
@@ -178,14 +200,19 @@ def main():
             df = st.session_state.df
             file_name = uploaded_file.name.split('.')[0].upper()
 
-            st.write("# Report Summary")
-            st.write(f"### _Let's score this business: {file_name}_")
+            st.markdown(
+                f"<h3 style='text-align: center; font-family: Times New Roman, serif;'>Let's Score This Business: {file_name}</h3>",
+                unsafe_allow_html=True
+            )
             "---"
             #st.write(df)  #Comment Uncomment to show raw data for testing purpose.
             # Assume df is already loaded and processed
+            
             if "Report Date" in df.index:
-                st.subheader("Individual Growth Scores")
-                
+                st.markdown(
+                    "<h3 style='text-align: center; font-family: Times New Roman, serif;'>Individual Growth Scores</h3>",
+                    unsafe_allow_html=True
+                )
                 all_scores = []
 
                 # Manually call the function for each metric
@@ -204,7 +231,7 @@ def main():
                 overall_score = calculate_overall_score(all_scores)
 
                 if overall_score is not None:
-                    st.subheader("Overall Growth Score")
+                    st.subheader("👮🏻‍♂️ Overall Growth Score")
 
                     st.slider("Overall Growth Score", 0, 100, int(overall_score), disabled=True, format="%d")
                     
@@ -233,15 +260,11 @@ def main():
             # TODO: Intrinsic Value and Safety Margin
             #ReportSummary(df)
             "---"
-            st.write ("# Target Price Section and target ETA probability")
+            st.write ("# 👮🏻‍♂️ Target Price Section and target ETA probability")
             st.write("...work in progress 🚜👷🚧🏗️")
 
             "---"
             
-
-    
-        
-
 
 
         
