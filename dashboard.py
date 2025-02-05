@@ -279,7 +279,7 @@ def main():
                                 # Commit & push to Git
                                 commit_to_git()
                                 st.success("✅ Comment submitted successfully!")
-                                st.markdown(f"**Your Comment:** _{user_comment}_")
+                                
 
 
 
