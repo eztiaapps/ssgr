@@ -392,6 +392,15 @@ def contactus():
                 st.success("✅ Thank you! We'll get back to you soon.")
 
 
+def commit_to_git():
+    """Automatically commit and push changes to Git."""
+    try:
+        os.system("git add comments.txt")
+        os.system('git commit -m "Auto-update comments"')
+        os.system("git push origin main")
+        st.info("Comment successfully pushed to Git 🚀")
+    except Exception as e:
+        st.error(f"Git push failed: {e}")
 
 
 def read_process_excel_bkp(uploaded_file):

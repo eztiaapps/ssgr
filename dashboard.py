@@ -233,7 +233,6 @@ def main():
 
                 if overall_score is not None:
                     st.subheader("👮🏻‍♂️ Overall Growth Score")
-
                     st.slider("Overall Growth Score", 0, 100, int(overall_score), disabled=True, format="%d")
                     
 
@@ -250,9 +249,9 @@ def main():
                         label = "Good"
                     
                     st.markdown(colored_text(f"Overall Score is: {overall_score}, for {file_name}", 'Red'), unsafe_allow_html=True)
+                    st.markdown(f"<span style='color:{color}; font-size:22px; font-weight:bold'>The score is: {label}</span>", unsafe_allow_html=True)
+                    
                     st.markdown(colored_text(f"It must be Good, only then we can consider a company for investment!", 'orange'), unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:{color}; font-size:22px; font-weight:bold'>{label}</span>", unsafe_allow_html=True)
-
                     "---"
                     st.markdown("<br><br>", unsafe_allow_html=True)  # Adds vertical space
 
@@ -277,6 +276,8 @@ def main():
                                 st.warning("⚠️ Please enter a valid comment before submitting.")
                             else:
                                 save_comment(email, phone, user_comment)
+                                # Commit & push to Git
+                                commit_to_git()
                                 st.success("✅ Comment submitted successfully!")
                                 st.markdown(f"**Your Comment:** _{user_comment}_")
 
