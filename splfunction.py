@@ -398,7 +398,7 @@ def commit_to_git():
         os.system("git add comments.txt")
         os.system('git commit -m "Auto-update comments"')
         os.system("git push origin main")
-        st.info("Comment successfully pushed to Git 🚀")
+        st.info("YOu can also email us : eztiaapps@gmail.com 🚀")
     except Exception as e:
         st.error(f"Git push failed: {e}")
 
