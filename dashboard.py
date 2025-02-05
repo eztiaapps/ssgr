@@ -175,7 +175,7 @@ def main():
         uploaded_file = st.file_uploader("Please upload here:", type=["xlsx"])
         # Increment and display the visitor count
         visitor_count = get_visitor_count()
-        st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far!")
+        st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far today!")
 
         # Check if file was removed or changed
         if "uploaded_file" not in st.session_state:

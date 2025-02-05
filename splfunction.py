@@ -553,7 +553,7 @@ def display_comments():
                 if len(fields) == 5:
                     user_id, email, phone, date, comment_text = fields
                     # Display the comment details
-                    st.write(f"**User ID:** on {date}")
+                    st.write(f"**User ID:**{user_id} : on {date}")
                     st.write(f"Comment: {comment_text}")
                     st.markdown("---")
         else:
