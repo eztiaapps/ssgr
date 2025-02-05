@@ -262,23 +262,13 @@ def main():
                     # Comment Section
                     st.subheader("💬 Share Your Feedback on the analysis")
 
-                    with st.form(key="comment_form"):
-                        email = st.text_input("📧 Email (Required)", placeholder="Enter your email")
-                        phone = st.text_input("📱 Phone Number (Optional)", placeholder="Enter your phone number")
-                        user_comment = st.text_area("📝 Your Feedback", placeholder="Write your comment here...")
+                    # Comment section below the overall score
+                    st.markdown("### Leave a Comment Below")
+                    comment_section()
 
-                        submit_comment = st.form_submit_button("Submit")
-
-                        if submit_comment:
-                            if not email.strip():
-                                st.error("❌ Email is required to submit feedback. So that we can connect with you")
-                            elif not user_comment.strip():
-                                st.warning("⚠️ Please enter a valid comment before submitting.")
-                            else:
-                                save_comment(email, phone, user_comment)
-                                # Commit & push to Git
-                                commit_to_git()
-                                st.success("✅ Comment submitted successfully!")
+                    # Show existing comments
+                    st.markdown("### User Comments")
+                    display_comments()
                                 
 
 

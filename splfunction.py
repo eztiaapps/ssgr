@@ -7,6 +7,7 @@ import streamlit as st
 import numpy as np
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
 import os
+import uuid
 
 #Read the csv balance sheet, and process the file and parse it. Then calculates additionals rows of information like BSR.
 def read_process_excel(uploaded_file):
@@ -398,7 +399,7 @@ def commit_to_git():
         os.system("git add comments.txt")
         os.system('git commit -m "Auto-update comments"')
         os.system("git push origin main")
-        st.info("YOu can also email us : eztiaapps@gmail.com 🚀")
+        st.info("Yo u can also email us : eztiaapps@gmail.com 🚀")
     except Exception as e:
         st.error(f"Git push failed: {e}")
 
@@ -521,11 +522,62 @@ def read_process_excel_bkp(uploaded_file):
 
 COMMENTS_FILE = "comments.txt"
 
-def save_comment(email, phone, comment):
-    """Save user feedback to a text file in comma-separated format."""
-    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    data = f"{date}, {email}, {phone}, {comment}\n"
+# Function to generate a unique user ID using UUID
+def generate_user_id():
+    return str(uuid.uuid4())[:8]  # Generates a unique ID and uses the first 8 characters
 
-    # Append comment to the file
-    with open(COMMENTS_FILE, "a") as file:
-        file.write(data)
+# Function to store user comments in a file
+def save_comment(email, phone, comment):
+    user_id = generate_user_id()
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # If phone is empty, store it as an empty string
+    phone = phone if phone else ""
+    # If comment is empty, store it as an empty string
+    comment = comment if comment else ""
+    with open("comments.txt", "a") as file:
+        file.write(f"{user_id},{email},{phone},{date},{comment}\n")
+
+# Function to read and display comments
+def display_comments():
+    try:
+        with open("comments.txt", "r") as file:
+            comments = file.readlines()
+
+        # Display the most recent comments
+        if comments:
+            st.subheader("Recent Comments")
+            for comment in comments:
+                # Split the comment data into respective fields
+                fields = comment.strip().split(",")
+                # Ensure that there are exactly 5 values in each line
+                if len(fields) == 5:
+                    user_id, email, phone, date, comment_text = fields
+                    # Display the comment details
+                    st.write(f"**User ID:** on {date}")
+                    st.write(f"Comment: {comment_text}")
+                    st.markdown("---")
+        else:
+            st.write("No comments yet.")
+    except FileNotFoundError:
+        st.write("No comments yet.")
+
+# Function to display the overall score (for illustration)
+def display_overall_score():
+    # Example: Show the overall score (replace with your actual score calculation)
+    overall_score = 85  # Placeholder for overall score
+    st.subheader("Overall Score")
+    st.write(f"**Score: {overall_score}**")
+    st.markdown("---")
+
+# Function for the comment section below the overall score
+def comment_section():
+    email = st.text_input("Email (Required)", key="email")
+    phone = st.text_input("Phone (Optional)", key="phone")
+    comment = st.text_area("Your Comment", key="comment")
+
+    if st.button("Submit Comment"):
+        if email:
+            save_comment(email, phone, comment)
+            st.success("Your comment has been submitted!")
+        else:
+            st.error("Email is required to submit a comment.")
