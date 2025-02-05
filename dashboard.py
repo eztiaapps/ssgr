@@ -277,6 +277,8 @@ def main():
                                 st.warning("⚠️ Please enter a valid comment before submitting.")
                             else:
                                 save_comment(email, phone, user_comment)
+                                # Commit & push to Git
+                                commit_to_git()
                                 st.success("✅ Comment submitted successfully!")
                                 st.markdown(f"**Your Comment:** _{user_comment}_")
 
