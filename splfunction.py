@@ -323,10 +323,10 @@ def display_score(metric, df, years):
         )
         
         # Assign color based on score
-        if score_value < 34:
+        if score_value < 50:
             color = "red"
             label = "Poor"
-        elif score_value < 67:
+        elif score_value < 75:
             color = "orange"
             label = "Average"
         else:
@@ -369,6 +369,27 @@ def increment_visitor_count():
         file.write(str(new_count))  # Write the updated count back to the file
     return new_count
 
+def contactus():
+    """Displays the Contact Us section at the bottom."""
+    with st.container():
+        st.markdown(
+            "<h2 style='text-align: center; font-family: Times New Roman, serif; color: yellow;'>📞 Contact Us</h2>",
+            unsafe_allow_html=True
+        )
+
+        st.write("📧 **Email:** support@datalotus.com")
+        st.write("📞 **Phone:** +1 234 567 8900")
+        st.write("📍 **Address:** 123 Finance Street, Market City, USA")
+
+        # Contact Form
+        with st.form(key="contact_form"):
+            name = st.text_input("Your Name")
+            email = st.text_input("Your Email")
+            message = st.text_area("Your Message")
+            submit_button = st.form_submit_button("Submit")
+
+            if submit_button:
+                st.success("✅ Thank you! We'll get back to you soon.")
 
 
 
@@ -489,6 +510,13 @@ def read_process_excel_bkp(uploaded_file):
     return df
 
 
+COMMENTS_FILE = "comments.txt"
 
+def save_comment(email, phone, comment):
+    """Save user feedback to a text file in comma-separated format."""
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data = f"{date}, {email}, {phone}, {comment}\n"
 
-
+    # Append comment to the file
+    with open(COMMENTS_FILE, "a") as file:
+        file.write(data)
