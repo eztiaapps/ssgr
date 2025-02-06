@@ -167,7 +167,7 @@ def main():
         "---"
 
         st.markdown(
-            f"<h3 style='text-align: center; font-family: Times New Roman, serif;'>Upload the stock's balance sheet 📈</h3>",
+            f"<h3 style='text-align: center; font-family: Times New Roman, serif;'>Upload the stock's balance sheet 📈 from {source}.in </h3>",
             unsafe_allow_html=True
         )
         
@@ -175,6 +175,7 @@ def main():
         uploaded_file = st.file_uploader("Please upload here:", type=["xlsx"])
         # Increment and display the visitor count
         visitor_count = get_visitor_count()
+
         st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far today!")
 
         # Check if file was removed or changed
@@ -255,24 +256,6 @@ def main():
                     "---"
                     st.markdown("<br><br>", unsafe_allow_html=True)  # Adds vertical space
 
-                    #Collect comment and user feedback
-                    COMMENTS_FILE = "comments.txt"
-
-
-                    # Comment Section
-                    st.subheader("💬 Share Your Feedback on the analysis")
-
-                    # Comment section below the overall score
-                    st.markdown("### Leave a Comment Below")
-                    comment_section()
-
-                    # Show existing comments
-                    st.markdown("### User Comments")
-                    display_comments()
-                                
-
-
-
                 else:
                     st.warning("Not enough data for overall score calculation.")
 
@@ -282,9 +265,41 @@ def main():
             # Display DataFrame
             # TODO: Intrinsic Value and Safety Margin
             #ReportSummary(df)
-            "---"
-            st.write ("# 👮🏻‍♂️ Target Price Section and target ETA probability")
-            st.write("...work in progress 🚜👷🚧🏗️")
+            
+            st.write ("# 👮🏻‍♂️ Target Price or Fair Value, Safety Margin")
+            
+            #Let's calculate the Fair value for 3 and 5 years historical.
+            # Get PE and EPS values for last 3 years
+            pe_values_3y = get_metric_values_last_n_years(df, 'PE', 3)
+            eps_values_3y = get_metric_values_last_n_years(df, 'EPS', 3)
+
+            # Get PE and EPS values for last 5 years
+            pe_values_5y = get_metric_values_last_n_years(df, 'PE', 5)
+            eps_values_5y = get_metric_values_last_n_years(df, 'EPS', 5)
+
+            # Calculate CAGRs for PE and EPS for 3 and 5 years
+            pe_cagr_3y = calculate_cagr(pe_values_3y)
+            pe_cagr_5y = calculate_cagr(pe_values_5y)
+            eps_cagr_3y = calculate_cagr(eps_values_3y)  
+            eps_cagr_5y = calculate_cagr(eps_values_5y)  
+
+            # Get current PE and EPS
+            pe_current = df.loc["PE"].dropna().iloc[-1]
+            eps_current = df.loc["EPS"].dropna().iloc[-1]  
+
+            # Calculate fair value for 5 years
+            fair_value_5y = (1 + pe_cagr_5y) * pe_current * (1 + eps_cagr_5y) * eps_current
+            fv_5y = round(fair_value_5y,2)
+            st.subheader("**Based on past 5 years performance,**")
+            st.write(f"Fair Value or Future Value should be: {fv_5y} INR")
+
+            # Calculate fair value for 3 years
+            fair_value_3y = (1 + pe_cagr_3y) * pe_current * (1 + eps_cagr_3y) * eps_current
+            fv_3y = round(fair_value_3y,2)
+            st.subheader("**Based on past 3 years performance,**")
+            st.write(f"Fair Value or Future Value should be: {fv_3y} INR")
+
+            st.warning("Overall Growth Score should be: Good and only then we use Target Value! Else Avoid!")
 
             "---"
             
