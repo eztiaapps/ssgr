@@ -10,12 +10,16 @@ import os
 import uuid
 
 #Read the csv balance sheet, and process the file and parse it. Then calculates additionals rows of information like BSR.
+
+
 def read_process_excel(uploaded_file):
     # Convert Streamlit uploaded file into a BytesIO object
     file_stream = BytesIO(uploaded_file.getvalue())
 
     # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
     df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
+
+    print(df)
 
     # Convert all empty strings and 'NaT' values to NaN
     df.replace(['', 'NaT'], pd.NA, inplace=True)
@@ -26,9 +30,10 @@ def read_process_excel(uploaded_file):
     # Ensure first column is not lost (reset index)
     df.reset_index(drop=True, inplace=True)
 
+    print(df.loc[0])
+
     # Convert only "Report Date" rows to date format
     df.loc[df[0] == 'Report Date', 1:] = df.loc[df[0] == 'Report Date', 1:].apply(pd.to_datetime, errors='coerce').apply(lambda x: x.dt.strftime('%Y-%m-%d'))
-
     # Replace <NA> with 0 when the row contains other valid values
     for idx, row in df.iterrows():
         if row.notna().any():  # Check if at least one value is not NaN
@@ -85,7 +90,6 @@ def read_process_excel(uploaded_file):
     if "Sales" in df.index and "Net profit" in df.index:
         df.loc["NPM%"] = df.loc["Net profit"].astype(float) / df.loc["Sales"].astype(float)
 
-    # 5 Calculate 3 Years Avg NPM% 
     # 5 Calculate Average 3 Year NPM% for each column
     if "NPM%" in df.index:
         npms = df.loc[["NPM%"]].astype(float).fillna(0)  # Convert to DataFrame & replace NaN with 0
@@ -178,6 +182,76 @@ def read_process_excel(uploaded_file):
 
         # Store result in the dataframe
         df.loc["BSR"] = bsr * 100
+    
+    #12 Calculate EPS
+    if "Net profit" in df.index and "Adjusted Equity Shares in Cr" in df.index:
+        net_profit = df.loc["Net profit"].astype(float)
+        equity_shares = df.loc["Adjusted Equity Shares in Cr"].astype(float)
+
+        # Avoid division by zero
+        df.loc["EPS"] = net_profit / equity_shares.replace(0, float("nan"))
+        df.loc["EPS"].fillna(0, inplace=True)  # Replace NaN with 0
+    
+    #13. EPS Growth
+    if "EPS" in df.index:
+        eps_values = df.loc["EPS"].astype(float)
+
+        # Shift EPS values to get the previous year EPS
+        previous_eps = eps_values.shift(1)
+
+        # Standard EPS Growth Calculation
+        eps_growth = (eps_values - previous_eps) / previous_eps
+
+        # Handle special case: Previous EPS is negative, Current EPS is positive
+        mask = (previous_eps < 0) & (eps_values > 0)
+        eps_growth[mask] = ((eps_values - previous_eps) / abs(previous_eps)) * 100
+
+        # Replace NaN and infinity values with 0 to avoid errors
+        eps_growth.replace([float("inf"), float("-inf")], 0, inplace=True)
+        eps_growth.fillna(0, inplace=True)
+
+        # Store in DataFrame
+        df.loc["EPS Growth"] = eps_growth
+
+    # 14. Price to Earning (PE)
+    if "EPS" in df.index and "PRICE:" in df.index:
+        eps_values = df.loc["EPS"].astype(float)
+        price_values = df.loc["PRICE:"].astype(float)
+
+        # Calculate PE Ratio
+        pe_ratio = price_values / eps_values
+
+        # Handle division by zero or invalid values
+        pe_ratio.replace([float("inf"), float("-inf")], 0, inplace=True)
+        pe_ratio.fillna(0, inplace=True)
+
+        # Store in DataFrame
+        df.loc["PE"] = pe_ratio
+        
+    # 15. PE Growth
+    if "PE" in df.index:
+        pe_values = df.loc["PE"].astype(float)
+
+        # Shift EPS values to get the previous year EPS
+        previous_pe = pe_values.shift(1)
+
+        # Standard EPS Growth Calculation
+        pe_growth = (pe_values - previous_pe) / previous_pe
+
+        # Handle special case: Previous EPS is negative, Current EPS is positive
+        mask = (previous_pe < 0) & (pe_values > 0)
+        pe_growth[mask] = ((pe_values - previous_pe) / abs(previous_pe)) * 100
+
+        # Replace NaN and infinity values with 0 to avoid errors
+        pe_growth.replace([float("inf"), float("-inf")], 0, inplace=True)
+        pe_growth.fillna(0, inplace=True)
+
+        # Store in DataFrame
+        df.loc["PE Growth"] = pe_growth
+
+    #16. Rolling PE Growth and EPS Growth 5 and 3 years.
+    # Then we can see whether our predictions working or not.
+    # When compared with Price.
 
     
     return df
@@ -307,6 +381,88 @@ def calculate_growth_score(df, metric, years=5):
     normalized_score = np.clip((weighted_growth - min_score) / (max_score - min_score) * 100, 0, 100)
 
     return round(normalized_score, 2)
+
+def calculate_growth_score(df, metric, years=5):
+    """Calculate a weighted growth score for a given metric over a specified period."""
+
+    if metric not in df.index or "Report Date" not in df.index:
+        return None  # Return None if data or metric is missing
+
+    # Convert 'Report Date' to datetime and sort by date
+    report_dates = pd.to_datetime(df.loc["Report Date"], errors='coerce')
+    metric_data = df.loc[metric].astype(float)
+
+    # Drop columns with invalid dates
+    valid_mask = report_dates.notna()
+    report_dates = report_dates[valid_mask]
+    metric_data = metric_data[valid_mask]
+
+    # Sort data in chronological order (oldest to latest)
+    sorted_indices = report_dates.argsort()
+    report_dates = report_dates.iloc[sorted_indices]
+    metric_data = metric_data.iloc[sorted_indices]
+
+    # Determine the latest available year
+    latest_year = report_dates.dt.year.max()
+    target_years = list(range(latest_year, latest_year - years, -1))
+
+    # Filter data to only include the target years
+    metric_filtered = metric_data[report_dates.dt.year.isin(target_years)]
+    report_filtered = report_dates[report_dates.dt.year.isin(target_years)]
+
+    # Ensure we have enough periods for calculation
+    periods = min(len(metric_filtered) - 1, years - 1)
+    if periods < 2:
+        return None  # Not enough data
+
+    # Calculate Year-over-Year Growth (%)
+    growth_rates = []
+    for i in range(1, periods + 1):
+        prev_value = metric_filtered.iloc[i - 1]
+        curr_value = metric_filtered.iloc[i]
+
+        if prev_value == 0:
+            growth_rate = 0  # Avoid division by zero
+        else:
+            growth_rate = ((curr_value - prev_value) / abs(prev_value)) * 100
+
+        # If it's a negative metric, invert the impact (growth is bad, reduction is good)
+        if metric in NEGATIVE_METRICS:
+            growth_rate = -growth_rate  # Invert logic: Higher growth is bad, reduction is good
+
+        growth_rates.append(growth_rate)
+
+    # Apply weighting (more recent years have higher weight)
+    weights = np.arange(periods, 0, -1)  # Example: [5, 4, 3, 2, 1] for 5 years
+    weighted_growth = np.dot(growth_rates, weights) / weights.sum()
+
+    # Normalize score between 0-100 (assuming min/max range)
+    min_score, max_score = -50, 50  # Define reasonable bounds for scaling
+    normalized_score = np.clip((weighted_growth - min_score) / (max_score - min_score) * 100, 0, 100)
+
+    return round(normalized_score, 2)
+
+
+def calculate_overall_growth_score(df):
+    """Calculate the overall growth score, adjusting based on BSR growth score."""
+
+    # Calculate individual growth scores
+    bsr_growth_score = calculate_growth_score(df, "BSR", years=5)
+    overall_growth_score = sum(
+        calculate_growth_score(df, metric, years=5) or 0
+        for metric in df.index if metric not in ["Report Date", "BSR"]
+    ) / (len(df.index) - 2)  # Exclude Report Date & BSR
+
+    # Apply BSR influence on overall score
+    if bsr_growth_score is not None:
+        if bsr_growth_score < 40:
+            overall_growth_score = 40  # Poor
+        elif bsr_growth_score <= 70:
+            overall_growth_score = 50  # Average
+
+    return round(overall_growth_score, 2)
+
+
 
 
 def display_score(metric, df, years):
@@ -553,7 +709,7 @@ def display_comments():
                 if len(fields) == 5:
                     user_id, email, phone, date, comment_text = fields
                     # Display the comment details
-                    st.write(f"**User ID:**{user_id} : on {date}")
+                    st.write(f"**User** : {user_id} : on {date}")
                     st.write(f"Comment: {comment_text}")
                     st.markdown("---")
         else:
@@ -581,3 +737,105 @@ def comment_section():
             st.success("Your comment has been submitted!")
         else:
             st.error("Email is required to submit a comment.")
+
+
+
+
+# Function to get PE and EPS current from the DataFrame
+def get_pe_eps_current(df):
+    """Retrieve the most recent PE and EPS values from the DataFrame."""
+    try:
+        # Get the most recent PE value (from the 'PE' row)
+        pe_current = df.loc["PE"].dropna().iloc[-1]  # Get last non-null value in PE row
+        
+        # Get the most recent EPS value (from the 'EPS' row)
+        eps_current = df.loc["EPS"].dropna().iloc[-1]  # Get last non-null value in EPS row
+        
+        return pe_current, eps_current
+    except KeyError:
+        # If 'PE' or 'EPS' rows do not exist in the DataFrame
+        print("Error: PE or EPS data not found in the DataFrame.")
+        return None, None
+
+# Function to calculate Fair Value using PE and EPS CAGR
+def get_fair_value_for_available_years(df, pe_current, eps_current, years=5):
+    """
+    Calculates Fair Value based on available PE and EPS data and CAGR for the available years.
+    
+    Parameters:
+    - df: DataFrame with PE and EPS rows
+    - pe_current: Current PE value (from the most recent data)
+    - eps_current: Current EPS value (from the most recent data)
+    - years: The number of years to calculate the CAGR (default is 5)
+    
+    Returns:
+    - Fair value calculated based on the available data
+    """
+    # Determine available years for PE and EPS
+    available_years = df.shape[1] - 1  # excluding the 'Report Date' column
+    if available_years < years:
+        print(f"Data available for {available_years} years. Calculating using {available_years} years.")
+        years = available_years
+    
+    # Calculate the PE and EPS CAGR for the available years
+    pe_values = df.loc["PE"].dropna()[:years].values
+    eps_values = df.loc["EPS"].dropna()[:years].values
+
+    # Calculate the PE and EPS CAGRs
+    pe_cagr = calculate_cagr(pe_values)
+    eps_cagr = calculate_cagr(eps_values)
+
+    # Calculate the fair value using the formula
+    fair_value = (1 + pe_cagr) * pe_current * (1 + eps_cagr) * eps_current
+    
+    return round(fair_value, 2)
+
+# Function to calculate CAGR for a given set of values
+def calculate_cagr(values):
+    """Calculates the Compound Annual Growth Rate (CAGR) given an array of values."""
+    if len(values) < 2:
+        return 0  # If there is not enough data, return 0 CAGR
+    
+    start_value = values[0]
+    end_value = values[-1]
+    
+    # If the start and end values are the same, return 0 CAGR (no growth)
+    if start_value == end_value:
+        return 0
+
+    years = len(values) - 1
+    try:
+        cagr = (end_value / start_value) ** (1 / years) - 1
+        return cagr
+    except ZeroDivisionError:
+        return 0  # Return 0 if there's an issue with the division
+
+
+def get_metric_values_last_n_years(df, metric, n):
+    """Retrieve the list of historical values for a given metric (PE, EPS, etc.) for the last n years."""
+    try:
+        # Ensure the given metric exists in the DataFrame
+        if metric not in df.index:
+            print(f"Error: '{metric}' row not found in the DataFrame.")
+            return []
+
+        # Get the values for the specified metric, drop NaN values
+        metric_values = df.loc[metric].dropna()  # Drop any NaN values
+        
+        # If there are fewer than n values, return all available values
+        if len(metric_values) < n:
+            print(f"Warning: Only {len(metric_values)} years of data available. Returning all available data.")
+            return metric_values.tolist()
+
+        # Return the last n values
+        return metric_values[-n:].tolist()
+    
+    except KeyError:
+        # Handle the case if the specified metric row does not exist in the DataFrame
+        print(f"Error: '{metric}' row not found in the DataFrame.")
+        return []
+    
+
+
+
+
