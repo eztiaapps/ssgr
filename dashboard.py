@@ -289,15 +289,15 @@ def main():
 
             # Calculate fair value for 5 years
             fair_value_5y = (1 + pe_cagr_5y) * pe_current * (1 + eps_cagr_5y) * eps_current
-            fv_5y = round(fair_value_5y,2)
+            
             st.subheader("**Based on past 5 years performance,**")
-            st.write(f"Fair Value or Future Value should be: {fv_5y} INR")
+            st.write(f"Fair Value or Future Value should be: {fair_value_5y} INR")
 
             # Calculate fair value for 3 years
             fair_value_3y = (1 + pe_cagr_3y) * pe_current * (1 + eps_cagr_3y) * eps_current
-            fv_3y = round(fair_value_3y,2)
+            
             st.subheader("**Based on past 3 years performance,**")
-            st.write(f"Fair Value or Future Value should be: {fv_3y} INR")
+            st.write(f"Fair Value or Future Value should be: {fair_value_3y} INR")
 
             st.warning("Overall Growth Score should be: Good and only then we use Target Value! Else Avoid!")
 
