@@ -150,10 +150,10 @@ def main():
         st.markdown(
             """
             <div style="text-align: center; font-family: Times New Roman, serif;">
-                <h2 style="font-size: 26px; font-family: Times New Roman, serif;">AI based stock balance sheet analysis?</h2>
+                <h2 style="font-size: 26px; font-family: Times New Roman, serif;">How to use the Stock Balance Sheet and Datalotus Assistant to decide whether to invest or avoid?</h2>
                 <h4 style="text-align: left; font-family: Times New Roman, serif; color: yellow">These 3 Signals are must!</h4>
                 <ul style="text-align: left;">
-                    <li><b>1. Get the balance sheet from Screener</b></li>
+                    <li><b>1. Overall Growth Score must be Good, Not Average, Not Poor!</b></li>
                     <li><b>2. BSR Growth and Sales Growth <i>both</i> must be Good, Not Average, Not Poor!</b></li>
                     <li><b>3. Target Price should have Safety Margin of at least 30%. [...Coming soon!]</b></li>
                 </ul>
@@ -291,13 +291,13 @@ def main():
             fair_value_5y = (1 + pe_cagr_5y) * pe_current * (1 + eps_cagr_5y) * eps_current
             
             st.subheader("**Based on past 5 years performance,**")
-            st.write(f"Fair Value or Future Value should be: {fair_value_5y:.2f} INR")
+            st.write(f"Fair Value or Future Value should be: {fair_value_5y} INR")
 
             # Calculate fair value for 3 years
             fair_value_3y = (1 + pe_cagr_3y) * pe_current * (1 + eps_cagr_3y) * eps_current
             
             st.subheader("**Based on past 3 years performance,**")
-            st.write(f"Fair Value or Future Value should be: {fair_value_3y: .2f} INR")
+            st.write(f"Fair Value or Future Value should be: {fair_value_3y} INR")
 
             st.warning("Overall Growth Score should be: Good and only then we use Target Value! Else Avoid!")
 

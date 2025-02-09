@@ -12,3 +12,7 @@ matplotlib
 yfinance
 seaborn
 uuid
+beautifulsoup4
+tweepy
+pyautogui
+pillow
