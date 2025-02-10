@@ -259,24 +259,14 @@ def main():
             eps_values_5y = get_metric_values_last_n_years(df, 'EPS', 5)
 
             # Calculate CAGRs for PE and EPS for 3 and 5 years
-            # Compute CAGR values safely
-            pe_cagr_5y = safe_cagr(calculate_cagr(pe_values_5y))
-            eps_cagr_5y = safe_cagr(calculate_cagr(eps_values_5y))
+            pe_cagr_3y = calculate_cagr(pe_values_3y)
+            pe_cagr_5y = calculate_cagr(pe_values_5y)
+            eps_cagr_3y = calculate_cagr(eps_values_3y)  
+            eps_cagr_5y = calculate_cagr(eps_values_5y)  
 
-            pe_cagr_3y = safe_cagr(calculate_cagr(pe_values_3y))
-            eps_cagr_3y = safe_cagr(calculate_cagr(eps_values_3y))
-
-
-            # Ensure other inputs are numeric
             # Get current PE and EPS
             pe_current = df.loc["PE"].dropna().iloc[-1]
-            eps_current = df.loc["EPS"].dropna().iloc[-1] 
-
-
-            print(f"pe_cagr_5y: {pe_cagr_5y}, Type: {type(pe_cagr_5y)}")
-            print(f"pe_current: {pe_current}, Type: {type(pe_current)}")
-            print(f"eps_cagr_5y: {eps_cagr_5y}, Type: {type(eps_cagr_5y)}")
-            print(f"eps_current: {eps_current}, Type: {type(eps_current)}")
+            eps_current = df.loc["EPS"].dropna().iloc[-1]  
 
             # Calculate fair value for 5 years
             fair_value_5y = (1 + pe_cagr_5y) * pe_current * (1 + eps_cagr_5y) * eps_current

@@ -792,37 +792,25 @@ def get_fair_value_for_available_years(df, pe_current, eps_current, years=5):
     
     return round(fair_value, 2)
 
-
-def safe_cagr(value):
-    """Converts CAGR to float safely, returns 0 if it's an error message."""
-    return value if isinstance(value, (int, float)) else 0
-
 # Function to calculate CAGR for a given set of values
 def calculate_cagr(values):
     """Calculates the Compound Annual Growth Rate (CAGR) given an array of values."""
     if len(values) < 2:
-        return 0  # Not enough data
+        return 0  # If there is not enough data, return 0 CAGR
     
     start_value = values[0]
     end_value = values[-1]
-    years = len(values) - 1
     
-    # If start and end values are the same, return 0 CAGR (no growth)
+    # If the start and end values are the same, return 0 CAGR (no growth)
     if start_value == end_value:
         return 0
 
-    # Handle negative start values
-    if start_value < 0 and end_value > 0:
-        return "CAGR not meaningful (crosses zero)"
-
-    # Use absolute values for calculation, then restore sign if needed
-    abs_cagr = (abs(end_value) / abs(start_value)) ** (1 / years) - 1
-
-    # Restore negative sign if trend remains negative
-    if start_value < 0 and end_value < 0:
-        return -abs_cagr
-    else:
-        return abs_cagr
+    years = len(values) - 1
+    try:
+        cagr = (end_value / start_value) ** (1 / years) - 1
+        return cagr
+    except ZeroDivisionError:
+        return 0  # Return 0 if there's an issue with the division
 
 
 def get_metric_values_last_n_years(df, metric, n):
