@@ -157,7 +157,7 @@ def main():
         visitor_count = get_visitor_count()
 
         st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far this week! Thank you for using it!")
-        st.write(f"Hi, pleaseshare your feedback or suggestions for new features to Email: eztiaapps@gmail.com")
+        st.write(f"Hi, please share your feedback or suggestions for new features to Email: eztiaapps@gmail.com")
 
         # Check if file was removed or changed
         if "uploaded_file" not in st.session_state:
