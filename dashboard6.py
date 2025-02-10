@@ -258,6 +258,12 @@ def main():
             pe_values_5y = get_metric_values_last_n_years(df, 'PE', 5)
             eps_values_5y = get_metric_values_last_n_years(df, 'EPS', 5)
 
+            print("\n" + 'pe and eps values')
+            print(pe_values_3y)
+            print(pe_values_5y)
+            print(eps_values_3y)
+            print(eps_values_5y)
+
             # Calculate CAGRs for PE and EPS for 3 and 5 years
             pe_cagr_3y = calculate_cagr(pe_values_3y)
             pe_cagr_5y = calculate_cagr(pe_values_5y)
