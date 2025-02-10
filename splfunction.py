@@ -19,8 +19,6 @@ def read_process_excel(uploaded_file):
     # Read Excel file WITHOUT auto-parsing and ensuring first column is not lost
     df = pd.read_excel(file_stream, header=None, skiprows=14, sheet_name="Data Sheet", dtype=object, keep_default_na=False)
 
-    print(df)
-
     # Convert all empty strings and 'NaT' values to NaN
     df.replace(['', 'NaT'], pd.NA, inplace=True)
 
@@ -798,7 +796,7 @@ def safe_cagr(value):
     return value if isinstance(value, (int, float)) else 0
 
 # Function to calculate CAGR for a given set of values
-def calculate_cagr(values):
+def calculate_cagr_bkp(values):
     """Calculates the Compound Annual Growth Rate (CAGR) given an array of values."""
     if len(values) < 2:
         return 0  # Not enough data
@@ -824,6 +822,28 @@ def calculate_cagr(values):
     else:
         return abs_cagr
 
+
+def calculate_cagr(values):
+    """Calculates CAGR while handling zero and negative start values safely."""
+    if len(values) < 2:
+        return 0  # Not enough data
+    
+    start_value = values[0]
+    end_value = values[-1]
+    years = len(values) - 1
+
+    # Handle zero or negative starting values
+    if start_value == 0:
+        return "CAGR not meaningful (start value is zero)"
+
+    if start_value < 0 and end_value > 0:
+        return "CAGR not meaningful (crosses zero)"
+
+    try:
+        abs_cagr = (abs(end_value) / abs(start_value)) ** (1 / years) - 1
+        return -abs_cagr if (start_value < 0 and end_value < 0) else abs_cagr
+    except ZeroDivisionError:
+        return "CAGR not meaningful (division by zero)"
 
 def get_metric_values_last_n_years(df, metric, n):
     """Retrieve the list of historical values for a given metric (PE, EPS, etc.) for the last n years."""
