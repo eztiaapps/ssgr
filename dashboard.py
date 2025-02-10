@@ -84,6 +84,10 @@ def main():
             f'<img src="data:image/jpeg;base64,{img_base64}" class="cover-glow">',
             unsafe_allow_html=True,
         )
+    
+    # Streamlit Title
+    st.sidebar.markdown("<br>", unsafe_allow_html=True)
+    st.sidebar.header(f"Datalotus Portfolio Assistant")
 
     st.sidebar.markdown("---")
 
