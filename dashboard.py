@@ -6,7 +6,6 @@ import requests
 import base64
 import streamlit as st
 import pandas as pd
-import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
@@ -46,7 +45,6 @@ def img_to_base64(image_path):
     except Exception as e:
         logging.error(f"Error converting image to base64: {str(e)}")
         return None
-
 
 
 def main():
@@ -136,34 +134,11 @@ def main():
         ))
 
     
-
-       
-
     if source == "Screener":
         st.markdown(
-            "<h1 style='text-align: center; font-family: Times New Roman, serif; color: cyan;'>Welcome to the World of Possibilities!</h1>",
+            "<h1 style='text-align: center; font-family: Times New Roman, serif; color: cyan;'>AI Powered Fundamental Analysis!</h1>",
             unsafe_allow_html=True
         )   
-        "---"
-
-
-        st.markdown(
-            """
-            <div style="text-align: center; font-family: Times New Roman, serif;">
-                <h2 style="font-size: 26px; font-family: Times New Roman, serif;">AI based stock balance sheet analysis?</h2>
-                <h4 style="text-align: left; font-family: Times New Roman, serif; color: yellow">These 3 Signals are must!</h4>
-                <ul style="text-align: left;">
-                    <li><b>1. Get the balance sheet from Screener</b></li>
-                    <li><b>2. BSR Growth and Sales Growth <i>both</i> must be Good, Not Average, Not Poor!</b></li>
-                    <li><b>3. Target Price should have Safety Margin of at least 30%. [...Coming soon!]</b></li>
-                </ul>
-                
-            </div>
-            <p>If any of the above 3 is missing, we avoid that stock, & choose another one!</p>
-            """,
-            unsafe_allow_html=True
-        )
-
         "---"
 
         st.markdown(
@@ -171,12 +146,13 @@ def main():
             unsafe_allow_html=True
         )
         
+
         # Sidebar file uploader
         uploaded_file = st.file_uploader("Please upload here:", type=["xlsx"])
         # Increment and display the visitor count
         visitor_count = get_visitor_count()
 
-        st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far!")
+        st.write(f"Visitors have used Datalotus AI Assistant: {visitor_count} times, so far this week!")
 
         # Check if file was removed or changed
         if "uploaded_file" not in st.session_state:
@@ -198,6 +174,7 @@ def main():
             
         
         # Display checkpoint info if DataFrame exists
+        
         if st.session_state.df is not None:
             df = st.session_state.df
             file_name = uploaded_file.name.split('.')[0].upper()
@@ -302,6 +279,24 @@ def main():
             st.warning("Overall Growth Score should be: Good and only then we use Target Value! Else Avoid!")
 
             "---"
+
+            st.markdown(
+            """
+            <div style="text-align: center; font-family: Times New Roman, serif;">
+                <h2 style="font-size: 26px; font-family: Times New Roman, serif;">Let's understand the result?</h2>
+                <h4 style="text-align: left; font-family: Times New Roman, serif; color: yellow">These 3 Signals are must!</h4>
+                <ul style="text-align: left;">
+                    <li><b>1. Check whether BSR is good or average, It must be Good :!</b></li>
+                    <li><b>2. Overall Growth score must be Good!</b></li>
+                    <li><b>3. Target Price should have Safety Margin of at least 30%. [...Coming soon!]</b></li>
+                </ul>
+                
+            </div>
+            <p>If any of the above 3 is missing, we avoid that stock, & choose another one!</p>
+            """,
+            unsafe_allow_html=True
+        )
+
             
 
 

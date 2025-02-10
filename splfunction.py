@@ -381,6 +381,7 @@ def calculate_growth_score(df, metric, years=5):
     normalized_score = np.clip((weighted_growth - min_score) / (max_score - min_score) * 100, 0, 100)
 
     return round(normalized_score, 2)
+    
 
 def calculate_growth_score(df, metric, years=5):
     """Calculate a weighted growth score for a given metric over a specified period."""
@@ -441,6 +442,7 @@ def calculate_growth_score(df, metric, years=5):
     normalized_score = np.clip((weighted_growth - min_score) / (max_score - min_score) * 100, 0, 100)
 
     return round(normalized_score, 2)
+
 
 
 def calculate_overall_growth_score(df):
