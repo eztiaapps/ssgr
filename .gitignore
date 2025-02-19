@@ -10,6 +10,7 @@ bugs.txt
 deploychecklist.txt
 development.txt
 data/
+datauploader.py
 
 # C extensions
 *.so

@@ -8,6 +8,7 @@ import numpy as np
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
 import os
 import uuid
+import sqlite3
 
 #Read the csv balance sheet, and process the file and parse it. Then calculates additionals rows of information like BSR.
 
@@ -868,7 +869,35 @@ def get_metric_values_last_n_years(df, metric, n):
         # Handle the case if the specified metric row does not exist in the DataFrame
         print(f"Error: '{metric}' row not found in the DataFrame.")
         return []
-    
+
+
+
+
+
+ # Function to get SQLite connection
+
+
+
+
+#Connect to stocklist db to fetch stock name
+def get_connection():
+    return sqlite3.connect("stocklist_v1.db", check_same_thread=False)
+
+# Function to fetch stock names from the database
+def get_stock_names():
+    conn = get_connection()
+    query = "SELECT DISTINCT symbol FROM data_table"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df["symbol"].tolist()
+
+# Function to fetch stock data based on selection
+def get_stock_data(stock_name):
+    conn = get_connection()
+    query = f"SELECT * FROM data_table WHERE symbol = '{stock_name}'"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df   
 
 
 
