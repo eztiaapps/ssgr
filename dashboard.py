@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from splfunction import *
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
+import sqlite3
 
 
 
@@ -92,7 +93,7 @@ def main():
     st.sidebar.markdown("---")
 
     # Sidebar for Mode Selection
-    source = st.sidebar.radio("Stock Balance Sheet Source:", options=["Screener", "Trendlyne", "MoneyControl"], index=0)
+    source = st.sidebar.radio("Stock Balance Sheet Source:", options=["Screener", "Trendlyne", "MoneyControl", "Browse"], index=0)
 
     st.sidebar.markdown("---")
 
@@ -311,6 +312,24 @@ def main():
             """,
             unsafe_allow_html=True
         )
+            
+    elif source == "Browse":
+        st.title("📈 Search for a Stock")
+        "---"
+
+        # Fetch stock names for dropdown
+        stock_names = get_stock_names()
+
+        if stock_names:
+            selected_stock = st.selectbox("Select a stock:", stock_names)
+
+            if selected_stock:
+                st.subheader(f"Stock Data for: {selected_stock}")
+                stock_data = get_stock_data(selected_stock)
+                st.write(stock_data)
+        else:
+            st.warning("No stock data available. Please upload a CSV file on the main page.")
+        
 
             
 
