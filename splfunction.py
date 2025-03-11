@@ -894,7 +894,7 @@ def get_stock_names():
 # Function to fetch stock data based on selection
 def get_stock_data(stock_name):
     conn = get_connection()
-    query = f"SELECT * FROM data_table WHERE symbol = '{stock_name}'"
+    query = f"SELECT exchange,symbol,name_of_company,isin_number FROM data_table WHERE symbol = '{stock_name}'"
     df = pd.read_sql(query, conn)
     conn.close()
     return df   

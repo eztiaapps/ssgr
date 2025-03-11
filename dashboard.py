@@ -13,6 +13,7 @@ import seaborn as sns
 from splfunction import *
 from metrics import POSITIVE_METRICS, NEGATIVE_METRICS
 import sqlite3
+import io
 
 
 
@@ -315,6 +316,7 @@ def main():
             
     elif source == "Browse":
         st.title("📈 Search for a Stock")
+        st.write("📈 This portal is work in progress")
         "---"
 
         # Fetch stock names for dropdown
@@ -324,16 +326,24 @@ def main():
             selected_stock = st.selectbox("Select a stock:", stock_names)
 
             if selected_stock:
-                st.subheader(f"Stock Data for: {selected_stock}")
+                #st.write(f"Stock Data for: {selected_stock}")
                 stock_data = get_stock_data(selected_stock)
-                st.write(stock_data)
+                #st.write(stock_data)
+                # Generate Screener.in URL
+                screener_url = f"https://www.screener.in/company/{selected_stock}/consolidated/"
+
+                # Modify the "name_of_company" field to include a clickable link
+                if "name_of_company" in stock_data.columns:
+                    stock_data["name_of_company"] = stock_data["name_of_company"].apply(
+                        lambda name: f'<a href="{screener_url}" target="_blank">{name}</a>'
+                    )
+
+                # Display stock data with clickable company name
+                st.write(stock_data.to_html(escape=False, index=False), unsafe_allow_html=True)
+
         else:
             st.warning("No stock data available. Please upload a CSV file on the main page.")
         
-
-            
-
-
         
     else:
         st.markdown("""
